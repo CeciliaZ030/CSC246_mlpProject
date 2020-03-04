@@ -32,8 +32,12 @@ class MLP:
 
         self.b1 = np.zeros((self.hidden_units, 1))
         self.b2 = np.zeros((self.dout, 1))
-        self.W1 = 2*(np.random.random((self.din, self.hidden_units)) - 0.5)
-        self.W2 = 2*(np.random.random((self.hidden_units, self.dout)) - 0.5)
+        self.W1 = 2*(np.random.random_sample((self.din, self.hidden_units)) - 0.5)
+        self.W2 = 2*(np.random.random_sample((self.hidden_units, self.dout)) - 0.5)
+
+        print("init")
+        print(self.W1, self.W2)
+        print(self.din, self.hidden_units, self.dout)
 
 
 
@@ -47,6 +51,7 @@ class MLP:
             return pickle.load(fh)
             
     def eval(self, xdata):
+
         ''' Evaluate the network on a set of N observations.
 
         xdata is a design matrix with dimensions (Din x N).
@@ -58,10 +63,11 @@ class MLP:
         N = xdata.shape[1]
         outputs = np.zeros((N, self.dout))
 
-        self.a1 = np.zeros(N, self.hidden_units)
-        self.z1 = np.zeros(N, self.hidden_units)
-        self.a2 = np.zeros(N, self.dout)
-
+        print("eval re-init cache")
+        self.a1 = np.zeros((N, self.hidden_units))
+        self.z1 = np.zeros((N, self.hidden_units))
+        self.a2 = np.zeros((N, self.dout))
+        print(self.b1, self.W1)
         #Go thru data set [0...n-1]
         for n in range(N):
 
@@ -73,7 +79,7 @@ class MLP:
                 #Go thru dimension [0...dim-1]
                 for i in range(self.din):
                     # xdata[n][i] input value, W1[j][i] weight of the input unit towards a hidden unit
-                    self.a1[n][j] += xdata[i][n] * W1[j][i]
+                    self.a1[n][j] += xdata[i][n] * self.W1[i][j]
                 self.z1[n][j] = np.tanh(self.a1[n][j])
 
 
@@ -83,33 +89,44 @@ class MLP:
             softmax_sum = 0
             for k in range(self.dout):
                 #adding offset first
-                self.[n][k] = self.b2[k]
+                self.a2[n][k] = self.b2[k]
                 #Go thru hidden layer [0...M]
                 for j in range(self.hidden_units):
-                    # z[j] activated value of hidden unit, W2[k][j] weight of that unit twards the output
-                    self.a2[n][k] += z[j] * W2[k][j]
+                    # z1[n][j] activated value of hidden unit, W2[k][j] weight of that unit twards the output
+                    self.a2[n][k] += self.z1[n][j] * self.W2[j][k]
                 softmax_sum += np.exp(self.a2[n][k])
                 y[k] = np.exp(self.a2[n][k])
 
             y = y/softmax_sum
-
             outputs[n] = y
 
+        #print("eval")
+        print(outputs)
         return outputs.transpose()
 
     def sgd_step(self, xdata, ydata, learn_rate):
         ''' Do one step of SGD on xdata/ydata with given learning rate. 
             softmax outputs and cross-entropy error
         ''' 
-        y_pred = self.eval(xdata)
-        print(y_pred)
+        print("sgd_step call grad")
+        dE_dW1, dE_db1, dE_dW2, dE_db2 = self.grad(xdata, ydata)
 
-        #del_E/del_w for each output unit
-        del_E = np.zeros((N, self.dout))
-        #for k in range (self.dout):
-        for wk in range(self.dout):
-            wk = 
-        pass
+
+        self.W1 = [[self.W1[i][j] + learn_rate * dE_dW1[i][j] 
+                            for j in range(self.hidden_units)] 
+                            for i in range(self.din)]
+
+        self.b1 =  [self.b1[i] + learn_rate * dE_db1[i] 
+                            for i in range(self.hidden_units)]
+
+        self.W2 = [[self.W2[i][j] + learn_rate * dE_dW2[i][j] 
+                            for j in range(self.dout)] 
+                            for i in range(self.hidden_units)]
+
+        self.b2 =  [self.b2[i] + learn_rate * dE_db2[i] 
+                            for i in range(self.dout)]
+
+
         
     def grad(self, xdata, ydata):
         ''' Return a tuple of the gradients of error wrt each parameter. 
@@ -122,37 +139,57 @@ class MLP:
         '''
         N = xdata.shape[1]
         dE_dW1 = np.zeros((self.din, self.hidden_units))
+        dE_db1 = np.zeros((self.hidden_units))
         dE_dW2 = np.zeros((self.hidden_units, self.dout))
+        dE_db2 = np.zeros((self.dout))
+
+        #eval to get predictions and cache of a1, z1, a2
+        print("grad call eval")
+        y_pred = self.eval(xdata)
 
         #(N * dout) computed as yk - tk for all n
         delta_k = (ydata - y_pred).transpose()
+        # print("delta_k shape: ", delta_k.shape)
+        # print("dE_db2 shape: ", dE_db2.shape)
+        # print(ydata, y_pred)
+
         #(N * hidden_units)
         delta_j = np.zeros((N, self.hidden_units))
 
-        #eval to get predictions and cache of a1, z1, a2
-        y_pred = self.eval(xdata)
 
         for n in range(N):
 
             #Output layer
+
             for k in range(self.dout):
+
+                # del_En/del_b2 = delta_k
+                dE_db2[k] += delta_k[n][k]
+                #print(delta_k[n][k])
+
                 for j in range(self.hidden_units):
                     # del_En/del_Wjk = delta_k * (input from j to k)
                     dE_dW2[j][k] += delta_k[n][k] * self.z1[n][j]
 
             #Hidden unit
+
             for j in range(self.hidden_units):
+                # del_En/del_b1 = delta_j
+                dE_db1[j] += delta_j[n][j]
 
                 # delta_j = h'(aj) * SUM_over_k(Wkj * delta_k)
                 prop_sum = 0 
                 for k in range(self.dout):
-                    prop_sum += self.W2[k][j] * delta_k[n][k]
-                delta_j[n][j] = (1 - self.a1[n][j]**2) * prop_sum
+                    prop_sum += self.W2[j][k] * delta_k[n][k]
+
+                print(self.a1)
+                delta_j[n][j] = (1 - self.a1[n][j]*self.a1[n][j]) * prop_sum
 
                 for i in range(self.din):
                     # del_En/del_Wij = delta_j * (input from i to j)
                     dE_dW1[i][j] += delta_j[n][j] * xdata[i][n]
         
-        return (dE_dW1, dE_dW2)
+        print(dE_db2)
+        return (dE_dW1, dE_db1, dE_dW2, dE_db2)
         
 

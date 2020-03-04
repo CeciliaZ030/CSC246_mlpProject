@@ -62,6 +62,7 @@ def main():
 
     for epoch in range(args.epochs):
         for batch in range(int(N/batch_size)):
+            print("train batch")
             ids = random.choices(list(range(N)), k=batch_size)
             xbatch = np.array([xtrain[:,n] for n in ids]).transpose()
             ybatch = np.array([ytrain[:,n] for n in ids]).transpose()
