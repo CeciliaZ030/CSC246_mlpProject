@@ -183,13 +183,13 @@ class MLP:
                     prop_sum += self.W2[j][k] * delta_k[n][k]
 
                 print(self.a1)
-                delta_j[n][j] = (1 - self.a1[n][j]*self.a1[n][j]) * prop_sum
+                delta_j[n][j] = (1 - self.a1[n][j]**2) * prop_sum
 
                 for i in range(self.din):
                     # del_En/del_Wij = delta_j * (input from i to j)
                     dE_dW1[i][j] += delta_j[n][j] * xdata[i][n]
         
         print(dE_db2)
-        return (dE_dW1, dE_db1, dE_dW2, dE_db2)
+        return (dE_dW1/N, dE_db1/N, dE_dW2/N, dE_db2/N)
         
 
