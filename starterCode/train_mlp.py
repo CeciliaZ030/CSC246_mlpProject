@@ -15,7 +15,10 @@ def main():
     parser.add_argument('--batch_size', type=int, default=1, help='The batch size to use for SGD. (default 1)')
     args = parser.parse_args()
 
-
+    if args.hidden_units == 0:
+        print("Can't process with 0 hidden units.")
+        exit()
+        
     # Load training and development data and convert labels to 1-hot representation.
     xtrain, ytrain = dataproc.load_data(args.train_file)
     ytrain = dataproc.to_one_hot(ytrain, int(1+np.max(ytrain[0,:])))
