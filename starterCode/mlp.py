@@ -34,10 +34,6 @@ class MLP:
         self.W1 = 2*(np.random.random_sample((self.din, self.hidden_units)) - 0.5)
         self.W2 = 2*(np.random.random_sample((self.hidden_units, self.dout)) - 0.5)
 
-        print("init")
-        print(self.W1, self.W2)
-        print(self.din, self.hidden_units, self.dout)
-
 
 
 
