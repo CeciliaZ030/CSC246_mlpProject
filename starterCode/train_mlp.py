@@ -22,8 +22,6 @@ def main():
     # Load training and development data and convert labels to 1-hot representation.
     xtrain, ytrain = dataproc.load_data(args.train_file)
     ytrain = dataproc.to_one_hot(ytrain, int(1+np.max(ytrain[0,:])))
-    print(xtrain)
-    print(ytrain)
     if (args.dev_file is not None):
         xdev, ydev = dataproc.load_data(args.dev_file)
         ydev = dataproc.to_one_hot(ydev,int(1+np.max(ytrain[0,:])))
@@ -32,7 +30,6 @@ def main():
     N = xtrain.shape[1]
     din = xtrain.shape[0]
     dout = ytrain.shape[0]
-    print("N: ", N, "  din: ", din, "   dout: ", dout)
 
     batch_size = args.batch_size
     if (batch_size == 0):
@@ -43,8 +40,7 @@ def main():
 
     # Evaluate MLP after initialization; yhat is matrix of dim (Dout x N).
     yhat = nn.eval(xtrain)
-    print("yhat")
-    print(yhat)
+
 
     best_train = (analysis.mse(ytrain, yhat), 
                   analysis.mce(ytrain, yhat),
