@@ -59,7 +59,11 @@ def main():
         print('mce(dev):  %f'%(best_dev[1]))
         print('acc(dev):  %f'%(best_dev[2]))
 
+    dev_acc = 0
+    
     for epoch in range(args.epochs):
+        if dev_acc >= 90:
+            exit()
         for batch in range(int(N/batch_size)):
             ids = random.choices(list(range(N)), k=batch_size)
             xbatch = np.array([xtrain[:,n] for n in ids]).transpose()
@@ -71,11 +75,12 @@ def main():
         train_ce = analysis.mce(ytrain, yhat)
         train_acc = analysis.accuracy(ytrain, yhat)*100
         best_train = (min(best_train[0], train_ss), min(best_train[1], train_ce), max(best_train[2], train_acc))
-
-        print('After %d epochs ~~~~~~~~~~~~~'%(epoch+1))
-        print('mse(train):  %f  (best= %f)'%(train_ss, best_train[0]))
-        print('mce(train):  %f  (best= %f)'%(train_ce, best_train[1]))
-        print('acc(train):  %f  (best= %f)'%(train_acc, best_train[2]))
+        
+        if epoch % 500 == 0:
+            print('After %d epochs ~~~~~~~~~~~~~'%(epoch+1))
+            print('mse(train):  %f  (best= %f)'%(train_ss, best_train[0]))
+            print('mce(train):  %f  (best= %f)'%(train_ce, best_train[1]))
+            print('acc(train):  %f  (best= %f)'%(train_acc, best_train[2]))
 
         if (args.dev_file is not None):
             yhat = nn.eval(xdev)
@@ -83,10 +88,10 @@ def main():
             dev_ce = analysis.mce(ydev, yhat)
             dev_acc = analysis.accuracy(ydev, yhat)*100
             best_dev = (min(best_dev[0], dev_ss), min(best_dev[1], dev_ce), max(best_dev[2], dev_acc))
-            print('mse(dev):  %f  (best= %f)'%(dev_ss, best_dev[0]))
-            print('mce(dev):  %f  (best= %f)'%(dev_ce, best_dev[1]))
-            print('acc(dev):  %f  (best= %f)'%(dev_acc, best_dev[2]))
-        print('')
+            if epoch % 500 == 0:
+                print('mse(dev):  %f  (best= %f)'%(dev_ss, best_dev[0]))
+                print('mce(dev):  %f  (best= %f)'%(dev_ce, best_dev[1]))
+                print('acc(dev):  %f  (best= %f)'%(dev_acc, best_dev[2]))
 
         nn.save('modelFile')
 
