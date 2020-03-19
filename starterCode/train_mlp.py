@@ -11,8 +11,8 @@ def main():
     parser.add_argument('--dev_file', default=None, help='Path to the development data.')
     parser.add_argument('--epochs', type=int, default=10, help='The number of epochs to train. (default 10)')
     parser.add_argument('--learn_rate', type=float, default=1e-1, help='The learning rate to use for SGD (default 1e-1).')
-    parser.add_argument('--hidden_units', type=int, default=0, help='The number of hidden units to use. (default 0)')
-    parser.add_argument('--batch_size', type=int, default=1, help='The batch size to use for SGD. (default 1)')
+    parser.add_argument('--hidden_units', type=int, default=30, help='The number of hidden units to use. (default 0)')
+    parser.add_argument('--batch_size', type=int, default=25, help='The batch size to use for SGD. (default 1)')
     args = parser.parse_args()
 
     if args.hidden_units == 0:
